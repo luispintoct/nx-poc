@@ -1,0 +1,11 @@
+{
+    "name": "@commercetools-cli/content",
+    "targets": {
+        "test": {
+            "command": "echo 'dummy test'"
+        }
+    },
+    "commercetools": {
+        "release": "abc"
+    }
+}

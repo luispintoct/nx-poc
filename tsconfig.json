@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // Specifies the ECMAScript version for the output code (targeting Node.js 16, 18, and 20).
+    "target": "es2018",
+    // Specifies the module system used (CommonJS for Node.js compatibility).
+    "module": "CommonJS",
+    // Specifies the libraries to include for type-checking (ES2018).
+    "lib": ["es2018"],
+    // Enables strict type-checking options.
+    "strict": true,
+    // Allows interoperability between CommonJS and ES Modules.
+    "esModuleInterop": true,
+    // Specifies how module dependencies are resolved (Node.js resolution strategy).
+    "moduleResolution": "node",
+    // Generates corresponding .d.ts files for TypeScript files.
+    "declaration": true,
+    // Allows importing JSON files directly.
+    "resolveJsonModule": true,
+    // Enables project references for faster builds in a monorepo setup.
+    "composite": false,
+    // Enable incremental compilation.
+    "incremental": false,
+    // Skip type checking all .d.ts files.
+    "skipLibCheck": true,
+    // Disable emitting comments.
+    "removeComments": true,
+  },
+  "exclude": ["./node_modules", "./node_modules/@types/mocha/index.d.ts", "dist"],
+}

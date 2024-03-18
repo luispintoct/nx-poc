@@ -1,0 +1,16 @@
+{
+  "name": "@commercetools-cli/services-connect",
+  "version": "0.0.0",
+  "main": "dist",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest --collectCoverage"
+  },
+  "dependencies": {
+    "@commercetools-cli/services-git": "workspace:*"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  }
+}
