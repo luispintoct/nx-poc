@@ -1,0 +1,4 @@
+## 2.1.1 (2024-03-18)
+
+
+- This bump does not introduce any new features or fixes. It is solely a result of updates to dependencies, tooling, or global settings.
