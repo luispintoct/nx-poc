@@ -1,0 +1,31 @@
+{
+  "name": "@commercetools/cli",
+  "version": "0.0.0",
+  "bin": {
+    "commercetools": "bin/run.js"
+  },
+  "main": "dist",
+  "scripts": {
+    "dev": "node bin/dev",
+    "start": "node bin/run",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest --collectCoverage"
+  },
+  "dependencies": {
+    "@commercetools-cli/topic-connect": "workspace:*"
+  },
+  "oclif": {
+    "bin": "commercetools",
+    "dirname": "commercetools",
+    "commands": "./dist/commands",
+    "topicSeparator": " ",
+    "plugins": [
+      "@commercetools-cli/topic-connect"
+    ]
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

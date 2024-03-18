@@ -1,0 +1,9 @@
+{
+  "name": "@commercetools-cli/topic-boilerplate",
+  "version": "0.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Dummy test\""
+  }
+}
