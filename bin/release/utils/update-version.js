@@ -21,7 +21,7 @@ async function updateVersion(projectName, newVersion) {
       fs.writeFileSync(versionFilePath, newVersion);
     }
   } catch (error) {
-    throw new Error("CalculateNextVersion: updating version:", error.message);
+    throw new Error(`CalculateNextVersion: updating version: ${error.message}`);
   }
 }
 

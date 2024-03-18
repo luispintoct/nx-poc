@@ -38,7 +38,8 @@ async function getCommits(from, to, project) {
 
     streamCommits.on("error", (err) => {
       reject(
-        new Error("GetCommits: error while reading raw commits stream", err),
+        err,
+        // new Error("GetCommits: error while reading raw commits stream", err),
       );
     });
   });
