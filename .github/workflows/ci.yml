@@ -88,13 +88,18 @@ jobs:
         id: generate-matrix
         run: |
           # Obtain a list of affected projects, comma-delimited
-          projects=$(yarn nx show projects --affected | tr '\n' ',' | sed 's/,$//')
+          base=${{ github.event.before || 'origin/main' }}
+          projects=$(yarn nx show projects --base=$base --affected | tr '\n' ',' | sed 's/,$//')
           echo "Affected projects: $projects"
 
-          # Convert the comma-delimited list of projects into a JSON array
-          matrix=$(echo -e $projects | sed 's/,/","/g' | sed 's/^/["/;s/$/"]/')
-          echo "Matrix: $matrix"
+          if [ -z "$projects" ]; then
+            matrix=[]
+          else
+            # Convert the comma-delimited list of projects into a JSON array
+            matrix=$(echo -e $projects | sed 's/,/","/g' | sed 's/^/["/;s/$/"]/')
+          fi
 
+          echo "Matrix: $matrix"
           # Output the matrix to the designated GitHub output file
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
@@ -141,7 +146,7 @@ jobs:
       - name: check
         id: set-output
         run: |
-          messages=$(echo '${{ github.event.commits || steps.pr-commits.outputs.commits }}' | jq -r '[.[].message]')
+          messages=$(echo '${{  steps.pr-commits.outputs.commits || toJson(github.event.commits) }}' | jq -r '[.[].message]')
           messages_len=$(echo $messages | jq 'length')
           has_release_message=$(echo $messages | jq '. | map(startswith("release:")) | any')
 
