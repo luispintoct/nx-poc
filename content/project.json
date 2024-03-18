@@ -1,0 +1,6 @@
+{
+    "name": "@commercetools-cli/content",
+    "commercetools": {
+        "release": "abc"
+    }
+}
