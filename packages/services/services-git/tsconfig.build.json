@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    // Specifies the output directory for compiled files.
+    "outDir": "dist",
+    // Specifies the root directory of input files.
+    "rootDir": "src"
+  },
+  "include": ["./src/**/*"]
+}

@@ -1,0 +1,31 @@
+{
+  // Specifies that ESLint should stop looking for further configuration files in parent directories.
+  "root": true,
+  // Configures global variables.
+  "env": {
+    "node": true, // Enables Node.js global variables and Node.js scoping.
+    "es6": true // Enables ES6 syntax.
+  },
+  // Inherits configurations from base ESLint and TypeScript configurations, and integrates Prettier rules.
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  // Specifies the ESLint parser for TypeScript.
+  "parser": "@typescript-eslint/parser",
+  // Configures parser options, including ECMAScript version and source type.
+  "parserOptions": {
+    "ecmaVersion": 2021, // Sets ECMAScript version to ES12.
+    "sourceType": "module" // Sets source type to module (for ES module compatibility).
+  },
+  // Enables ESLint plugins for TypeScript and Prettier.
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  // Configures rules, including the Prettier rule to enforce formatting.
+  "rules": {
+    "prettier/prettier": "error" // Enforces Prettier formatting.
+  }
+}

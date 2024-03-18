@@ -1,0 +1,58 @@
+[
+    {
+        "key": "default-js",
+        "title": "Default (Javascript)",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-application-kit",
+            "path": "application-templates/javascript"
+        }
+    },
+    {
+        "key": "default-ts",
+        "title": "Default (Typescript)",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-application-kit",
+            "path": "application-templates/typescript"
+        }
+    },
+    {
+        "key": "payment-integration",
+        "title": "Payment Integration",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-payment-integration-template"
+        }
+    },
+    {
+        "key": "tax-integration",
+        "title": "Tax Integration",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-tax-integration-template"
+        }
+    },
+    {
+        "key": "product-ingestion",
+        "title": "Product Ingestion",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-product-ingestion-template"
+        }
+    },
+    {
+        "key": "email-integration",
+        "title": "Email Integration",
+        "repository": {
+            "source": "github",
+            "user": "commercetools",
+            "name": "connect-email-integration-template"
+        }
+    }
+]
