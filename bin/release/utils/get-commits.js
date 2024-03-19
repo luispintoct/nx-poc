@@ -23,7 +23,7 @@ async function getCommits(from, to, project) {
 
     streamCommits.on("end", () => {
       const commits = commitsFilter(conventionalCommits).filter((commit) => {
-        if (project == null) return true;
+        if (commit.scope == null) return true;
 
         const projectScope = project.startsWith("@")
           ? project.split("/")[1]
@@ -37,10 +37,7 @@ async function getCommits(from, to, project) {
     });
 
     streamCommits.on("error", (err) => {
-      reject(
-        err,
-        // new Error("GetCommits: error while reading raw commits stream", err),
-      );
+      reject(err);
     });
   });
 }
