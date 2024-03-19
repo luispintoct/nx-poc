@@ -144,22 +144,26 @@ jobs:
       has-release: ${{ steps.set-output.outputs.has-release }}
     steps:
       - id: pr-commits
-        if: github.event_name != 'push'
+        if: github.event_name == 'pull_request'
         run: |
           commits=$(curl -sSL "${{ github.event.pull_request.commits_url }}" | jq -c '[.[].commit]')
           echo "commits=$commits"
-          echo '${{ toJson(github) }}'
           echo "commits=$commits" >> $GITHUB_OUTPUT
 
-      # // TODO
-      # ref=refs/heads/gh-readonly-queue/main/pr-3-e21f1357eca17246581381b925830aa8ff8b66e9
-      # pr_number=$(echo "$ref" | grep -oE 'pr-[0-9]+' | tr -d 'pr-')
-      # echo $pr_number
-
+      - id: mg-commits
+        if: github.event_name == 'merge_group'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=$(echo "${{ github.ref }}" | grep -oE 'pr-[0-9]+' | tr -d 'pr-')
+          commits=$(gh pr view $pr_number --repo ${{github.repository}} --json commits | jq -c '.commits')
+          echo "commits=$commits"
+          echo "commits=$commits" >> $GITHUB_OUTPUT
+      
       - name: check
         id: set-output
         run: |
-          messages=$(echo '${{  steps.pr-commits.outputs.commits || toJson(github.event.commits) }}' | jq -r '[.[].message]')
+          messages=$(echo '${{  steps.pr-commits.outputs.commits || steps.mg-commits.outputs.commits || toJson(github.event.commits) }}' | jq -r '[.[].message // .[].messageHeadline]')
           messages_len=$(echo $messages | jq 'length')
           has_release_message=$(echo $messages | jq '. | map(startswith("release:")) | any')
 
@@ -224,7 +228,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ssh-key: ${{ secrets.SSH_RELEASE_PR_KEY }}
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
           fetch-depth: 0
 
       - name: Enable Corepack
@@ -241,6 +245,8 @@ jobs:
       
       - name: Create PR
         if: needs.check-release-commit.outputs['has-release'] == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -266,18 +272,18 @@ jobs:
           short_commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
           release_version="${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
 
+          release_pr_exists=$(gh pr list --base main --head release --state open --json number 2>/dev/null | jq -c '.[0].number')
+          if [ "$release_pr_exists" == "null" ]; then
+            # If the pull request doesn't exist, create a new one
+            gh pr create --base "main" --head "release" --title "Release [pending]" --body "- Release [pending]"
+          fi
+
           git add .
           git commit -m "release: $release_version"
           git push --force origin release
 
-          release_pr_exists=$(gh pr list --base main --head release --state open --json number 2>/dev/null | jq -c '.[0].number')
-          if [ "$release_pr_exists" == "null" ]; then
-            # If the pull request doesn't exist, create a new one
-            gh pr create --base "main" --head "release" --title "Release $release_version" --body "- Release $release_version"
-          else
-            # If the pull request exists, update it with the new changes
-            gh pr edit "$release_pr_exists" --base "main" --title "Release $release_version" --body "- Release $release_version"
-          fi
+          release_pr=$(gh pr list --base main --head release --state open --json number 2>/dev/null | jq -c '.[0].number')
+          gh pr edit "$release_pr" --base "main" --title "Release $release_version" --body "- Release $release_version"
 
       - name: Tag
         if: needs.check-release-commit.outputs['has-release'] == 'true'
