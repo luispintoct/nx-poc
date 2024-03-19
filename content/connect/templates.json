@@ -48,7 +48,7 @@
     },
     {
         "key": "email-integration",
-        "title": "Email Integration",
+        "title": "Email Integration (2)",
         "repository": {
             "source": "github",
             "user": "commercetools",

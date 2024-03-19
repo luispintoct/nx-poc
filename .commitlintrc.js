@@ -15,7 +15,7 @@ module.exports = {
         .toString()
         .trim()
         .split("\n");
-      const nxProjectsScopes = Object.keys(nxProjects).map((projectName) => {
+      const nxProjectsScopes = nxProjects.map((projectName) => {
         return projectName.startsWith("@")
           ? projectName.split("/")[1]
           : projectName;
