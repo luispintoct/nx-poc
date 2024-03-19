@@ -23,7 +23,7 @@ async function getCommits(from, to, project) {
 
     streamCommits.on("end", () => {
       const commits = commitsFilter(conventionalCommits).filter((commit) => {
-        if (project == null) return true;
+        if (commit.scope == null) return true;
 
         const projectScope = project.startsWith("@")
           ? project.split("/")[1]
