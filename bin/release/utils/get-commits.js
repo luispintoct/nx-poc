@@ -23,7 +23,7 @@ async function getCommits(from, to, project) {
 
     streamCommits.on("end", () => {
       const commits = commitsFilter(conventionalCommits).filter((commit) => {
-        if (commit.scope == null) return true;
+        if (commit.scope == null) return false;
 
         const projectScope = project.startsWith("@")
           ? project.split("/")[1]
@@ -32,7 +32,7 @@ async function getCommits(from, to, project) {
         return commit.scope === projectScope;
       });
 
-      console.debug(`GetCommits: commits=${JSON.stringify(commits)}`);
+      // console.debug(`GetCommits: commits=${JSON.stringify(commits)}`);
       resolve(commits);
     });
 
