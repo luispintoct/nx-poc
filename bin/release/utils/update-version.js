@@ -25,4 +25,18 @@ async function updateVersion(projectName, newVersion) {
   }
 }
 
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const project = args[0];
+  const version = args[1];
+
+  if (typeof project !== "string")
+    throw new Error(`Invalid project: ${project}`);
+
+  if (typeof version !== "string")
+    throw new Error(`Invalid version: ${version}`);
+
+  updateVersion(project, version);
+}
+
 module.exports = updateVersion;

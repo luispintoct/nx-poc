@@ -1,0 +1,11 @@
+{
+    "name": "@commercetools-cli/e2e",
+    "targets": {
+        "test": {
+            "command": "echo \"this project don't require tests\""
+        },
+        "run": {
+            "command": "echo 'run dummy e2e tests'"
+        }
+    }
+}
