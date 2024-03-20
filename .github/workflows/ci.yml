@@ -292,10 +292,10 @@ jobs:
           year=$(date -d "$commit_date" +'%Y')
           month=$(date -d "$commit_date" +'%m')
           commit_number=$(git rev-list --count "${{ github.sha }}")
-          short_commit_sha=$("${{ github.sha }}" | cut -c1-7)
-          release_version="release-${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
+          short_commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+          release_version="${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "release-$release_version" -m "Release $release_version" ${{ github.sha }}
+          git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}
           git push --tags

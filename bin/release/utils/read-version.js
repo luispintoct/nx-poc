@@ -3,6 +3,8 @@ const path = require("path");
 const nx = require("@nx/devkit");
 const { readFileSync } = require("fs");
 
+const isMainModule = require.main === module;
+
 async function readVersion(projectName) {
   const projects = await nx.createProjectGraphAsync();
   const project = projects.nodes[projectName];
@@ -13,9 +15,10 @@ async function readVersion(projectName) {
     const packageJson = JSON.parse(packageJsonContent);
 
     if (packageJson && packageJson.version) {
-      console.debug(
-        `ReadVersion: Found packageJsonPath=${packageJsonPath} version=${packageJson.version}`,
-      );
+      !isMainModule &&
+        console.debug(
+          `ReadVersion: Found packageJsonPath=${packageJsonPath} version=${packageJson.version}`,
+        );
       return packageJson.version;
     }
   } catch (error) {
@@ -26,17 +29,28 @@ async function readVersion(projectName) {
       const versionFromFile = versionContent.trim();
 
       if (versionFromFile) {
-        console.debug(
-          `ReadVersion: Found versionPath=${versionPath} version=${versionContent}`,
-        );
+        !isMainModule &&
+          console.debug(
+            `ReadVersion: Found versionPath=${versionPath} version=${versionContent}`,
+          );
         return versionFromFile;
       }
     } catch (error) {
       // If VERSION file doesn't exist or is empty
     }
   }
-
+  if (isMainModule) return "";
   throw new Error(`ReadVersion: Version not found, project: ${projectName}`);
+}
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const project = args[0];
+
+  if (typeof project !== "string")
+    throw new Error(`Invalid project ${project}`);
+
+  readVersion(project).then(console.log).catch();
 }
 
 module.exports = readVersion;
