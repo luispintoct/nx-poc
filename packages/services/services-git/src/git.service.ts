@@ -46,6 +46,10 @@ class GitService {
       console.error("Error cloning to folder:", error);
     }
   }
+
+  async push(): Promise<void> {
+    throw new Error("not implemented");
+  }
 }
 
 export { GitService };
