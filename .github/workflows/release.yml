@@ -65,8 +65,8 @@ jobs:
 
       - name: Add npm tokens to .yarnrc
         run: |
-          yarn config set npmScopes.commercetools.npmAuthToken lpCqBozx2nAElWamEGI0dg==
-          yarn config set npmScopes.commercetools-cli.npmAuthToken lpCqBozx2nAElWamEGI0dg==
+          yarn config set npmScopes.commercetools.npmAuthToken ${{ secrets. NPM_TOKEN }}
+          yarn config set npmScopes.commercetools-cli.npmAuthToken ${{ secrets. NPM_TOKEN }}
 
       - name: Deploy candidates
         run: |
@@ -126,8 +126,8 @@ jobs:
 
       - name: Add npm tokens to .yarnrc
         run: |
-          yarn config set npmScopes.commercetools.npmAuthToken lpCqBozx2nAElWamEGI0dg==
-          yarn config set npmScopes.commercetools-cli.npmAuthToken lpCqBozx2nAElWamEGI0dg==
+          yarn config set npmScopes.commercetools.npmAuthToken ${{ secrets. NPM_TOKEN }}
+          yarn config set npmScopes.commercetools-cli.npmAuthToken ${{ secrets. NPM_TOKEN }}
 
       - name: Deploy
         run: |

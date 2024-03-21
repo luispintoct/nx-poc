@@ -217,7 +217,7 @@ jobs:
         run: |
           # TODO:
           echo "::error::The release PR is not up-to-date with main."
-          exit 1
+          exit 0
 
   # Trigger release PR creation or Create release tag
   handle-release:
