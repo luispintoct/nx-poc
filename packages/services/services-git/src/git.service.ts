@@ -50,6 +50,10 @@ class GitService {
   async push(): Promise<void> {
     throw new Error("not implemented");
   }
+
+  async pull(): Promise<void> {
+    throw new Error("not implemented");
+  }
 }
 
 export { GitService };
