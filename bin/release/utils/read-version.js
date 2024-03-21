@@ -15,10 +15,10 @@ async function readVersion(projectName) {
     const packageJson = JSON.parse(packageJsonContent);
 
     if (packageJson && packageJson.version) {
-      !isMainModule &&
-        console.debug(
-          `ReadVersion: Found packageJsonPath=${packageJsonPath} version=${packageJson.version}`,
-        );
+      // !isMainModule &&
+      //   console.debug(
+      //     `ReadVersion: Found packageJsonPath=${packageJsonPath} version=${packageJson.version}`,
+      //   );
       return packageJson.version;
     }
   } catch (error) {
@@ -29,10 +29,10 @@ async function readVersion(projectName) {
       const versionFromFile = versionContent.trim();
 
       if (versionFromFile) {
-        !isMainModule &&
-          console.debug(
-            `ReadVersion: Found versionPath=${versionPath} version=${versionContent}`,
-          );
+        // !isMainModule &&
+        //   console.debug(
+        //     `ReadVersion: Found versionPath=${versionPath} version=${versionContent}`,
+        //   );
         return versionFromFile;
       }
     } catch (error) {

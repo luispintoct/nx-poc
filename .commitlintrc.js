@@ -23,4 +23,5 @@ module.exports = {
       return [2, "always", nxProjectsScopes];
     },
   },
+  defaultIgnores: false,
 };
