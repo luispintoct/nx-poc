@@ -84,11 +84,9 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
-              continue;
-            fi
-            echo $(yarn npm info $project --json)
-            echo "yarn npm info $project --json | jq '.versions | map(. == "$version") | any'"
+            # if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
+            #   continue;
+            # fi
             yarn workspace $project npm publish --tag=dev --tolerate-republish
           done
 
@@ -141,15 +139,15 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
-              continue;
-            fi
+            # if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
+            #   continue;
+            # fi
             yarn workspace $project npm publish --tolerate-republish
           done
           git tag production-release --force
           # git push origin production-release --force
 
-      - name: Run e2e (against candidates)
+      - name: Run e2e
         run: |
           # install cli globally
           npm i -g @commercetools/cli --registry=https://brave-suitable-snapper.ngrok-free.app/
