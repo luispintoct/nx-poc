@@ -280,9 +280,9 @@ jobs:
           release_pr=$(gh pr list --base main --head release --state open --json number 2>/dev/null | jq -c '.[0].number')
           if [ "$release_pr" == "null" ]; then
             # If the pull request doesn't exist, create a new one
-            gh pr create --base "main" --head "release" --title "Release [pending]" --body "- Release [pending]"
+            gh pr create --base "main" --head "release" --title "Release $release_version" --body "$release_body"
           else
-            gh pr edit "$release_pr" --base "main" --title "Release $release_version" --body "- Release $release_version"
+            gh pr edit "$release_pr" --base "main" --title "Release $release_version" --body "$release_body"
           fi
           
       - name: Tag
