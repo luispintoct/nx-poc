@@ -15,17 +15,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Get latest production release
         id: latest-prod-release
@@ -45,23 +36,15 @@ jobs:
   candidate:
     runs-on: ubuntu-latest
     needs: prepare
+    environment: Development
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-      
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Add npm tokens to .yarnrc
         run: |
@@ -72,11 +55,11 @@ jobs:
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(yarn node ./bin/release/utils/read-version $project)-dev"
-            yarn node ./bin/release/utils/update-version $project "$version"
+            version="$(./bin/project/read-version $project)-rc"
+            ./bin/release/update-version "$project" "$version"
           done
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(yarn node ./bin/release/utils/read-version $project)"
+            version="$(./bin/project/read-version $project)"
             dir=$(yarn nx show project $project --json | jq -r '.root')
             if [ ! -f "$dir/package.json" ]; then
               continue;
@@ -92,11 +75,11 @@ jobs:
 
       - name: Run e2e (against candidates)
         run: |
-          # install cli globally
+          # Install cli globally
           npm i -g @commercetools/cli --registry=https://brave-suitable-snapper.ngrok-free.app/
-          # log cli version
+          # Log cli version
           commercetools --version
-          # run tests
+          # Run tests
           yarn nx run @commercetools-cli/e2e:run
 
   production:
@@ -107,20 +90,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.RELEASE_GH_TOKEN }}
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-      
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Add npm tokens to .yarnrc
         run: |
@@ -131,7 +105,7 @@ jobs:
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
           echo $projects | jq -r '.[]' | while read -r project; do
-            version=$(yarn node ./bin/release/utils/read-version $project)
+            version="$(./bin/project/read-version $project)"
             dir=$(yarn nx show project $project --json | jq -r '.root')
             if [ ! -f "$dir/package.json" ]; then
               continue;
@@ -145,7 +119,7 @@ jobs:
             yarn workspace $project npm publish --tolerate-republish
           done
           git tag production-release --force
-          # git push origin production-release --force
+          git push origin production-release --force
 
       - name: Run e2e
         run: |
@@ -155,4 +129,3 @@ jobs:
           commercetools --version
           # run tests
           yarn nx run @commercetools-cli/e2e:run
-    

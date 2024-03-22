@@ -1,0 +1,15 @@
+# Generate release version based on provided commit
+commit_sha=$1
+commit_date=$(git log --format="%ad" --date=short -n 1 $commit_sha)
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    year=$(date -jf "%Y-%m-%d" "$commit_date" +"%Y")
+    month=$(date -jf "%Y-%m-%d" "$commit_date" +"%m")
+else
+    year=$(date -d "$commit_date" +"%Y")
+    month=$(date -d "$commit_date" +"%m")
+fi
+
+commit_number=$(git rev-list --count $commit_sha)
+short_commit_sha=$(echo $commit_sha | cut -c1-7)
+echo "${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
