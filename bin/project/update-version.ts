@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { execSync } = require("child_process");
-const fs = require("fs");
-const nx = require("@nx/devkit");
-const path = require("path");
+#!/usr/bin/env yarn ts-node
 
-async function updateVersion(projectName, newVersion) {
+import { execSync } from "child_process";
+import fs from "fs";
+import nx from "@nx/devkit";
+import path from "path";
+
+export async function updateVersion(projectName: string, newVersion: string) {
   const projects = await nx.createProjectGraphAsync();
   const project = projects.nodes[projectName];
 
@@ -21,7 +22,7 @@ async function updateVersion(projectName, newVersion) {
       fs.writeFileSync(versionFilePath, newVersion);
     }
   } catch (error) {
-    throw new Error(`Update Version: updating version: ${error.message}`);
+    throw new Error(`Update Version: ${error}`);
   }
 }
 
@@ -38,5 +39,3 @@ if (require.main === module) {
 
   updateVersion(project, version);
 }
-
-module.exports = updateVersion;

@@ -5,14 +5,15 @@
   "devDependencies": {
     "@commitlint/cli": "19.0.3",
     "@commitlint/config-conventional": "19.0.3",
-    "@nx/devkit": "^18.0.7",
+    "@nx/devkit": "^18.1.2",
     "@types/eslint": "^8",
+    "@types/git-raw-commits": "^2.0.4",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "@wayfair/one-version": "^0.4.0",
     "conventional-changelog-conventionalcommits": "7.0.2",
     "conventional-changelog-writer": "7.0.1",
-    "conventional-commits-filter": "4.0.0",
+    "conventional-commits-filter": "^4.0.0",
     "conventional-commits-parser": "5.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -20,8 +21,9 @@
     "git-raw-commits": "4.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.2",
-    "nx": "18.0.5",
-    "prettier": "^3.2.5"
+    "nx": "^18.1.2",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2"
   },
   "workspaces": [
     "packages/**"

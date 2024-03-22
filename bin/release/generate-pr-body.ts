@@ -1,10 +1,21 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const conventional = require("conventional-changelog-conventionalcommits");
-const changelogWriter = require("conventional-changelog-writer");
-const getCommits = require("./utils/get-commits");
-const readVersion = require("./utils/read-version");
+#!/usr/bin/env yarn ts-node
 
-async function generateReleaseBody(from, to, version, projects) {
+// @ts-expect-error no @types available
+import conventional from "conventional-changelog-conventionalcommits";
+// @ts-expect-error no @types available
+import changelogWriter from "conventional-changelog-writer";
+import { getCommits } from "../git/utils/get-commits";
+import { readVersion } from "../project/read-version";
+
+const DEFAULT_MESSAGE =
+  "\n- This bump does not introduce any new features or fixes. It is solely a result of updates to dependencies, tooling, or global settings.";
+
+async function generateReleaseBody(
+  from: string,
+  to: string,
+  version: string,
+  projects: string[],
+) {
   const convention = await conventional();
   const body = [`# 🚀 Release ${version}`];
 
@@ -24,10 +35,7 @@ async function generateReleaseBody(from, to, version, projects) {
       convention.writerOpts,
     );
 
-    if (commits.length === 0) {
-      changelog +=
-        "\n- This bump does not introduce any new features or fixes. It is solely a result of updates to dependencies, tooling, or global settings.";
-    }
+    if (commits.length === 0) changelog += DEFAULT_MESSAGE;
 
     body.push(`### ${project}${changelog.substring(2)}`);
   }
@@ -38,18 +46,14 @@ async function generateReleaseBody(from, to, version, projects) {
 if (require.main === module) {
   const args = process.argv.slice(2);
 
-  if (args.length < 4) {
-    throw new Error("Invalid projects.");
-  }
+  if (args.length < 4) throw new Error("Invalid arguments");
 
   const from = args[0];
   const to = args[1];
   const version = args[2];
   const projects = args[3].split(",");
 
-  generateReleaseBody(from, to, version, projects)
-    .then(console.log)
-    .catch(console.error);
+  generateReleaseBody(from, to, version, projects);
 }
 
 exports.generateReleaseBody = generateReleaseBody;

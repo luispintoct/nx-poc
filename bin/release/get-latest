@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Description: Get the latest release tag name from the Git repository.
+
+# Get the latest release tag name (if available)
+latest_release=$(git describe --abbrev=0 --match="release-*" 2>/dev/null || echo "")
+
+# If no release tag found, fallback to the initial commit hash
+if [ -z "$latest_release" ]; then
+  latest_release=$(git rev-list --max-parents=0 HEAD)
+fi
+
+# Output the latest release tag name or initial commit hash
+echo "$latest_release"

@@ -9,10 +9,8 @@ on:
     branches: [main]
     types: [checks_requested]
 
-permissions: write-all
-
 jobs:
-  # Enforce conventional commits in pull-requests
+  # Enforce conventional commits
   commits:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
@@ -23,17 +21,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Ensure commits format
         if: github.event_name == 'pull_request'
@@ -43,8 +32,7 @@ jobs:
         if: github.event_name == 'merge_group'
         run: yarn commitlint --from ${{ github.event.merge_group.base_sha }} --to ${{ github.event.merge_group.head_sha }} --verbose
 
-
-  # Enforce one version rule in pull-requests
+  # Enforce one version rule
   one-version-rule:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
@@ -52,18 +40,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-          cache: "yarn"
+          fetch-depth: 0
 
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       # https://opensource.google/documentation/reference/thirdparty/oneversion
       - name: Ensure the one version rule
@@ -75,44 +56,24 @@ jobs:
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Generate affected projects matrix
         id: generate-matrix
         run: |
-          # Obtain a list of affected projects, comma-delimited
           if [ "${{ github.event_name }}" = "push" ]; then
             base=${{ github.event.before }}
           else
             base=origin/main
           fi
-          projects=$(yarn nx show projects --base=$base --affected | tr '\n' ',' | sed 's/,$//')
-          echo "Affected projects: $projects"
-
-          if [ -z "$projects" ]; then
-            matrix=[]
-          else
-            # Convert the comma-delimited list of projects into a JSON array
-            matrix=$(echo -e $projects | sed 's/,/","/g' | sed 's/^/["/;s/$/"]/')
-          fi
-
-          echo "Matrix: $matrix"
-          # Output the matrix to the designated GitHub output file
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          projects=$(yarn nx show projects --base=$base --affected --json)
+          echo "matrix=$projects" >> $GITHUB_OUTPUT
 
   # Run tests for the affected projects
   test:
@@ -124,29 +85,41 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: Test Project
         run: yarn nx test ${{ matrix.project }}
 
-  # Looks for a release commit and enforce rules
-  check-release-commit:
+  # https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
+  test-result:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - run: |
+          result="${{ needs.test.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
+
+  # Evaluates if there is release commit and enforce rules
+  evaluate-release:
     runs-on: ubuntu-latest
     outputs:
-      has-release: ${{ steps.set-output.outputs.has-release }}
+      is_release: ${{ steps.set-output.outputs.is_release }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      # get the list of commits if pull-request
       - id: pr-commits
         if: github.event_name == 'pull_request'
         run: |
@@ -154,6 +127,7 @@ jobs:
           echo "commits=$commits"
           echo "commits=$commits" >> $GITHUB_OUTPUT
 
+      # get the list of commits if merge-queue
       - id: mg-commits
         if: github.event_name == 'merge_group'
         env:
@@ -163,143 +137,105 @@ jobs:
           commits=$(gh pr view $pr_number --repo ${{github.repository}} --json commits | jq -c '.commits')
           echo "commits=$commits"
           echo "commits=$commits" >> $GITHUB_OUTPUT
-      
-      - name: check
+
+      # check if is a release pull-request
+      - name: evaluate
         id: set-output
         run: |
-          messages=$(echo '${{  steps.pr-commits.outputs.commits || steps.mg-commits.outputs.commits || toJson(github.event.commits) }}' | jq -r '[.[].message // .[].messageHeadline]')
-          messages_len=$(echo $messages | jq 'length')
-          has_release_message=$(echo $messages | jq '. | map(startswith("release:")) | any')
+          # Extract messages from commits
+          commits='${{ steps.pr-commits.outputs.commits || steps.mg-commits.outputs.commits || toJson(github.event.commits) }}'
+          commit_messages=$(echo $commits | jq -r '[.[].message // .[].messageHeadline]')
+          commit_messages_len=$(echo $commit_messages | jq 'length')
 
-          if [[ $has_release_message == 'true' && $messages_len -gt 1 ]]; then
+          # Check if relase and fail if multiple commits found
+          is_release=$(echo $commit_messages | jq '. | map(startswith("release:")) | any')
+          if [[ $is_release == 'true' && $commit_messages_len -gt 1 ]]; then
             echo "::error::Multiple commits found, but there's a release commit. Only one commit is allowed if there's a release commit."
             exit 1
           fi
 
-          if [[ $has_release_message == 'true' ]]; then
-            echo "has-release=true"
-            echo "has-release=true" >> $GITHUB_OUTPUT
-          else
-            echo "has-release=false"
-            echo "has-release=false" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
+            # Get the commit hash of the latest commit on the branch:
+            feature_branch_commit=${{github.event.pull_request.head.sha}}
+            echo "feature_branch_commit=$feature_branch_commit"
+
+            # Get the commit hash of the latest commit on the main branch:
+            main_branch_commit=$(git rev-parse origin/main)
+            echo "main_branch_commit=$main_branch_commit"
+
+            # Find the last commit that the branches have in common:
+            common_commit=$(git merge-base origin/main $feature_branch_commit)
+            echo "common_commit=$common_commit"
+
+            # Compare the commit hashes
+            if [ "$common_commit" != "$main_branch_commit" ]; then
+                echo "::error::The release PR is not up-to-date with main."
+                exit 1
+            fi
           fi
 
-  # Makes sure if pull-request is release is up-to-date with main
-  check-release-pr:
+          if [[ "${{ github.event_name }}" == 'merge_group' ]]; then
+            # TODO:
+            echo "::error::The release PR is not up-to-date with main."
+          fi
+          
+          echo "is_release=$is_release" >> $GITHUB_OUTPUT
+
+  # Creates the release pull-request
+  create-release-pr:
     runs-on: ubuntu-latest
-    needs: check-release-commit
-    if: needs.check-release-commit.outputs['has-release'] == 'true'
+    environment: Development
+    needs: evaluate-release
+    if: |
+      github.event_name == 'push' &&
+      needs.evaluate-release.outputs['is_release'] == 'false'
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Check if release PR is up-to-date
-        if: github.event_name == 'pull_request'
-        run: |
-          # Get the commit hash of the latest commit on the branch:
-          feature_branch_commit=${{github.event.pull_request.head.sha}}
-          echo "feature_branch_commit=$feature_branch_commit"
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
-          # Get the commit hash of the latest commit on the main branch:
-          main_branch_commit=$(git rev-parse origin/main)
-          echo "main_branch_commit=$main_branch_commit"
-
-          # Find the last commit that the branches have in common:
-          common_commit=$(git merge-base origin/main $feature_branch_commit)
-          echo "common_commit=$common_commit"
-
-          # Compare the commit hashes
-          if [ "$common_commit" != "$main_branch_commit" ]; then
-              echo "::error::The release PR is not up-to-date with main."
-              exit 1
-          fi
-
-      - name: Check if release PR is up-to-date
-        if: github.event_name == 'merge_group'
-        run: |
-          # TODO:
-          echo "::error::The release PR is not up-to-date with main."
-          exit 0
-
-  # Trigger release PR creation or Create release tag
-  handle-release:
-    runs-on: ubuntu-latest
-    needs: check-release-commit
-    if: github.event_name == 'push'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.RELEASE_GH_TOKEN }}
-          fetch-depth: 0
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable
-      
-      - name: Create PR
-        if: needs.check-release-commit.outputs['has-release'] == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      - name: Create Release PR
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B release ${{ github.sha }}
           git reset --hard ${{ github.sha }}
 
-          latest_rc=$(git describe --abbrev=0 --match="release-*" 2>/dev/null || echo "")
-          if [ -z "$latest_rc" ]; then
-            latest_rc=$(git rev-list --max-parents=0 HEAD)
-          fi
-          
-          projects=$(yarn nx show projects --base=$latest_rc --affected)
+          latest_release=$(./bin/release/get-latest)
+          projects=$(yarn nx show projects --base="$latest_release" --affected)
 
           for project in $projects; do
-            yarn node ./bin/release/bump-version.js $latest_rc ${{ github.sha }} $project
-            yarn node ./bin/release/generate-changelog.js $latest_rc ${{ github.sha }} $project
+            ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
+            ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
-          commit_date=$(git log --format="%ad" --date=short -n 1 "${{ github.sha }}")
-          year=$(date -d "$commit_date" +'%Y')
-          month=$(date -d "$commit_date" +'%m')
-          commit_number=$(git rev-list --count "${{ github.sha }}")
-          short_commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
-          release_version="${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
-
-          git add .
-          git commit -m "release: $release_version"
+          release_version=$(./bin/release/generate-version ${{ github.sha }})
+          git add . && git commit -m "release: $release_version"
           git push --force origin release
 
-          release_body=$(yarn node ./bin/release/generate-release-body.js $latest_rc ${{ github.sha }} $release_version $(echo $projects | tr ' ' ',' | sed 's/,$//'))
-          echo "yarn node ./bin/release/generate-release-body.js $latest_rc ${{ github.sha }} $release_version $(echo $projects | tr '\n' ',' | sed 's/,$//')"
-          release_pr=$(gh pr list --base main --head release --state open --json number 2>/dev/null | jq -c '.[0].number')
-          if [ "$release_pr" == "null" ]; then
-            # If the pull request doesn't exist, create a new one
-            gh pr create --base "main" --head "release" --title "Release $release_version" --body "$release_body"
-          else
-            gh pr edit "$release_pr" --base "main" --title "Release $release_version" --body "$release_body"
-          fi
-          
-      - name: Tag
-        if: needs.check-release-commit.outputs['has-release'] == 'true'
+          project_list=$(echo $projects | tr ' ' ',' | sed 's/,$//'))
+          pr_body=$(./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
+          gh pr create --base main --head release --title "Release $release_version" --body "$pr_body" ||
+          gh pr edit -B release --base main --title "Release $release_version" --body "$pr_body"
+
+  # Creates the tag to trigger a new release
+  create-release-tag:
+    runs-on: ubuntu-latest
+    environment: Development
+    needs: evaluate-release
+    if: |
+      github.event_name == 'push' &&
+      needs.evaluate-release.outputs['is_release'] == 'true'
+    steps:
+      - name: create release tag
         run: |
-          commit_date=$(git log --format="%ad" --date=short -n 1 "${{ github.sha }}")
-          year=$(date -d "$commit_date" +'%Y')
-          month=$(date -d "$commit_date" +'%m')
-          commit_number=$(git rev-list --count "${{ github.sha }}")
-          short_commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
-          release_version="${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
-          
+          release_version=$(./bin/release/generate-release-version ${{ github.sha }})
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}

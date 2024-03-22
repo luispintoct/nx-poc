@@ -1,0 +1,37 @@
+name: 'For Each'
+description: 'Iterates through a list or JSON array of items and executes a script for each item'
+
+inputs:
+  items:
+    description: 'The list or JSON array of items to iterate through'
+    required: true
+  script:
+    description: 'The script to execute for each item'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check if input is JSON array
+      id: check_json_array
+      run: echo "${{ inputs.items }}" | jq -e '. | type == "array"'
+
+    - name: Parse items
+      if: steps.check_json_array.outputs.returncode == '0'
+      id: parse_json_items
+      run: echo "${{ inputs.items }}" | jq -c '.[]'
+
+    - name: Parse list items
+      if: steps.check_json_array.outputs.returncode != '0'
+      id: parse_list_items
+      run: echo "${{ inputs.items }}"
+
+    - name: Iterate and execute script
+      run: |
+        while read -r item; do
+          echo "Executing script for item: $item"
+          sh -c "${{ inputs.script }}" "$item"
+        done
+      shell: bash
+      env:
+        items: ${{ steps.parse_json_items.outputs.stdout || steps.parse_list_items.outputs.stdout }}
