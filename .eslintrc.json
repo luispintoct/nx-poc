@@ -24,5 +24,6 @@
   // Configures rules, including the Prettier rule to enforce formatting.
   "rules": {
     "prettier/prettier": "error" // Enforces Prettier formatting.
-  }
+  },
+  "ignorePatterns": ["dist", "node_modules"]
 }

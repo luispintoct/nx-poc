@@ -23,7 +23,11 @@
     // Skip type checking all .d.ts files.
     "skipLibCheck": true,
     // Disable emitting comments.
-    "removeComments": true,
+    "removeComments": true
   },
-  "exclude": ["./node_modules", "./node_modules/@types/mocha/index.d.ts", "dist"],
+  "exclude": [
+    "./node_modules",
+    "./node_modules/@types/mocha/index.d.ts",
+    "dist"
+  ]
 }
