@@ -118,7 +118,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       # get the list of commits if pull-request
       - id: pr-commits
         if: github.event_name == 'pull_request'
@@ -207,20 +207,20 @@ jobs:
           git checkout -B release ${{ github.sha }}
           git reset --hard ${{ github.sha }}
 
-          latest_release=$(./bin/release/get-latest)
+          latest_release=$(node ./bin/release/get-latest)
           projects=$(yarn nx show projects --base="$latest_release" --affected)
 
           for project in $projects; do
-            ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
-            ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
+            node ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
+            node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
-          release_version=$(./bin/release/generate-version ${{ github.sha }})
+          release_version=$(node ./bin/release/generate-version ${{ github.sha }})
           git add . && git commit -m "release: $release_version"
           git push --force origin release
 
           project_list=$(echo $projects | tr ' ' ',' | sed 's/,$//'))
-          pr_body=$(./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
+          pr_body=$(node ./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
           gh pr create --base main --head release --title "Release $release_version" --body "$pr_body" ||
           gh pr edit -B release --base main --title "Release $release_version" --body "$pr_body"
 
@@ -235,7 +235,7 @@ jobs:
     steps:
       - name: create release tag
         run: |
-          release_version=$(./bin/release/generate-release-version ${{ github.sha }})
+          release_version=$(node ./bin/release/generate-release-version ${{ github.sha }})
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}
