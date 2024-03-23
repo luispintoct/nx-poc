@@ -208,7 +208,7 @@ jobs:
           git checkout -B release ${{ github.sha }}
           git reset --hard ${{ github.sha }}
 
-          latest_release=$(node ./bin/release/get-latest)
+          latest_release=$(./bin/release/get-latest)
           projects=$(yarn nx show projects --base="$latest_release" --affected)
 
           for project in $projects; do
@@ -216,7 +216,7 @@ jobs:
             node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
-          release_version=$(node ./bin/release/generate-version ${{ github.sha }})
+          release_version=$(./bin/release/generate-version ${{ github.sha }})
           git add . && git commit -m "release: $release_version"
           git push --force origin release
 
@@ -236,7 +236,7 @@ jobs:
     steps:
       - name: create release tag
         run: |
-          release_version=$(node ./bin/release/generate-release-version ${{ github.sha }})
+          release_version=$(./bin/release/generate-version ${{ github.sha }})
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}
