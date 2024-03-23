@@ -212,8 +212,8 @@ jobs:
           projects=$(yarn nx show projects --base="$latest_release" --affected)
 
           for project in $projects; do
-            node ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
-            node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
+            yarn ts-node ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
+            yarn ts-node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
           release_version=$(./bin/release/generate-version ${{ github.sha }})
@@ -221,7 +221,7 @@ jobs:
           git push --force origin release
 
           project_list=$(echo $projects | tr ' ' ',' | sed 's/,$//'))
-          pr_body=$(node ./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
+          pr_body=$(yarn ts-node ./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
           gh pr create --base main --head release --title "Release $release_version" --body "$pr_body" ||
           gh pr edit -B release --base main --title "Release $release_version" --body "$pr_body"
 
