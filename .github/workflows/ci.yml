@@ -32,11 +32,38 @@ jobs:
         if: github.event_name == 'merge_group'
         run: yarn commitlint --from ${{ github.event.merge_group.base_sha }} --to ${{ github.event.merge_group.head_sha }} --verbose
 
+  # Enforce linter
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+
+      # https://opensource.google/documentation/reference/thirdparty/oneversion
+      - name: Ensure the one version rule
+        run: | 
+          yarn eslint $(git diff --name-only --diff-filter=ACMRTUXB main | grep -E "(.js$|.ts$|.tsx|.json$)")
+  
+  # Dependencies audit
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: npm audit
+        uses: yarn workspaces foreach --all npm audit
+
   # Enforce one version rule
   one-version-rule:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -212,16 +239,16 @@ jobs:
           projects=$(yarn nx show projects --base="$latest_release" --affected)
 
           for project in $projects; do
-            node ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
-            node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
+            yarn ts-node ./bin/project/bump-version.ts "$latest_release" ${{ github.sha }} "$project"
+            yarn ts-node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
           release_version=$(./bin/release/generate-version ${{ github.sha }})
           git add . && git commit -m "release: $release_version"
           git push --force origin release
 
-          project_list=$(echo $projects | tr ' ' ',' | sed 's/,$//'))
-          pr_body=$(node ./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list"
+          project_list=$(echo $projects | tr ' ' ',' | sed 's/,$//')
+          pr_body=$(yarn ts-node ./bin/release/generate-pr-body.ts "$latest_release" ${{ github.sha }} "$release_version" "$project_list")
           gh pr create --base main --head release --title "Release $release_version" --body "$pr_body" ||
           gh pr edit -B release --base main --title "Release $release_version" --body "$pr_body"
 

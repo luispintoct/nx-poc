@@ -1,8 +1,8 @@
 #!/usr/bin/env yarn ts-node
 
 import { execSync } from "child_process";
+import * as nx from "@nx/devkit";
 import fs from "fs";
-import nx from "@nx/devkit";
 import path from "path";
 
 export async function updateVersion(projectName: string, newVersion: string) {

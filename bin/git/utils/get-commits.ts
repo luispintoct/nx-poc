@@ -26,7 +26,10 @@ export async function getCommits(
     });
 
     streamCommits.on("data", (rawCommit: string) => {
-      const parsedCommit = commitsParser.sync(rawCommit, convention.parserOpts);
+      const parsedCommit = commitsParser.sync(
+        rawCommit.toString(),
+        convention.parserOpts,
+      );
       conventionalCommits.push(parsedCommit);
     });
 

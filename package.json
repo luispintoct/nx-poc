@@ -28,5 +28,8 @@
   "workspaces": [
     "packages/**"
   ],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json}": "eslint"
+  },
   "packageManager": "yarn@4.1.0"
 }

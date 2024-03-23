@@ -3,15 +3,11 @@
   "defaultBase": "origin/main",
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn":
+        ["^build"]
     },
     "test": {
-      "dependsOn": [
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["^build", "build"]
     }
   }
 }

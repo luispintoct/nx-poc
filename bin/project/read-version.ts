@@ -7,7 +7,7 @@
  */
 
 import path from "path";
-import nx from "@nx/devkit";
+import * as nx from "@nx/devkit";
 import { readFileSync } from "fs";
 
 export async function readVersion(projectName: string): Promise<string> {

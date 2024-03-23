@@ -2,7 +2,7 @@
 
 import fs from "fs";
 import path from "path";
-import nx from "@nx/devkit";
+import * as nx from "@nx/devkit";
 // @ts-expect-error no @types available
 import conventional from "conventional-changelog-conventionalcommits";
 // @ts-expect-error no @types available
