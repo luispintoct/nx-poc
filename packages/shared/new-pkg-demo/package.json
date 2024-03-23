@@ -1,9 +1,0 @@
-{
-  "name": "@commercetools-cli/new-pkg-demo",
-  "version": "0.0.1",
-  "description": "",
-  "private": true,
-  "scripts": {
-    "test": "echo \"Dummy test\""
-  }
-}

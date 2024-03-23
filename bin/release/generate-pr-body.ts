@@ -53,7 +53,7 @@ if (require.main === module) {
   const version = args[2];
   const projects = args[3].split(",");
 
-  generateReleaseBody(from, to, version, projects);
+  generateReleaseBody(from, to, version, projects).then(console.log);
 }
 
 exports.generateReleaseBody = generateReleaseBody;

@@ -4,6 +4,10 @@ on:
   push:
     tags: ["release-*"]
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -46,6 +50,9 @@ jobs:
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
 
+      - name: Build
+        run: yarn nx run-many -t build
+
       - name: Add npm tokens to .yarnrc
         run: |
           yarn config set npmScopes.commercetools.npmAuthToken ${{ secrets. NPM_TOKEN }}
@@ -55,7 +62,7 @@ jobs:
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(yarn ts-node ./bin/project/read-version.ts $project)-rc"
+            version="$(yarn ts-node ./bin/project/read-version.ts $project)-$(./bin/release/get-version-hash)"
             yarn ts-node ./bin/project/update-version.ts "$project" "$version"
           done
           echo $projects | jq -r '.[]' | while read -r project; do
@@ -67,10 +74,11 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            # if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
-            #   continue;
-            # fi
-            yarn workspace $project npm publish --tag=dev --tolerate-republish
+            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any") == "true" ]]; then
+              echo "::warning::Project $project@$version already exists"
+              continue;
+            fi
+            yarn workspace $project npm publish --tag=dev
           done
 
       - name: Run e2e (against candidates)
@@ -96,6 +104,9 @@ jobs:
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
 
+      - name: Build
+        run: yarn nx run-many -t build
+
       - name: Add npm tokens to .yarnrc
         run: |
           yarn config set npmScopes.commercetools.npmAuthToken ${{ secrets. NPM_TOKEN }}
@@ -113,10 +124,11 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            # if [[ $(yarn npm info $project --json | jq '.versions | map(. == "$version") | any') == "true" ]]; then
-            #   continue;
-            # fi
-            yarn workspace $project npm publish --tolerate-republish
+            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any") == "true" ]]; then
+              echo "::warning::Project $project@$version already exists"
+              continue;
+            fi
+            yarn workspace $project npm publish
           done
           git tag production-release --force
           git push origin production-release --force

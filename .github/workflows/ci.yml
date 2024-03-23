@@ -35,6 +35,7 @@ jobs:
   # Enforce linter
   lint:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,9 +46,9 @@ jobs:
         uses: ./.github/actions/bootstrap
 
       # https://opensource.google/documentation/reference/thirdparty/oneversion
-      - name: Ensure the one version rule
+      - name: Ensure code style
         run: | 
-          yarn eslint $(git diff --name-only --diff-filter=ACMRTUXB main | grep -E "(.js$|.ts$|.tsx|.json$)")
+          yarn eslint $(git diff --name-only --diff-filter=ACMRTUXB main | grep -E "(.js$|.ts$|.json$)")
   
   # Dependencies audit
   audit:
@@ -55,11 +56,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
 
       - name: npm audit
-        uses: yarn workspaces foreach --all npm audit
+        run: yarn workspaces foreach --all npm audit
 
   # Enforce one version rule
   one-version-rule:
@@ -95,7 +97,7 @@ jobs:
         id: generate-matrix
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            base=${{ github.event.before }}
+            base=$(./bin/release/get-latest)
           else
             base=origin/main
           fi
@@ -175,54 +177,59 @@ jobs:
           commit_messages=$(echo $commits | jq -r '[.[].message // .[].messageHeadline]')
           commit_messages_len=$(echo $commit_messages | jq 'length')
 
-          # Check if relase and fail if multiple commits found
+          # Check if release and fail if multiple commits found
           is_release=$(echo $commit_messages | jq '. | map(startswith("release:")) | any')
           if [[ $is_release == 'true' && $commit_messages_len -gt 1 ]]; then
             echo "::error::Multiple commits found, but there's a release commit. Only one commit is allowed if there's a release commit."
             exit 1
           fi
-
+          echo "is_release=$is_release" >> $GITHUB_OUTPUT
+      
+      # check if release pr is up-to-date with main
+      - name: enforce release up-to-date
+        if: github.event_name != 'push' && steps.set-output.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           if [[ "${{ github.event_name }}" == 'pull_request' ]]; then
             # Get the commit hash of the latest commit on the branch:
-            feature_branch_commit=${{github.event.pull_request.head.sha}}
-            echo "feature_branch_commit=$feature_branch_commit"
-
-            # Get the commit hash of the latest commit on the main branch:
-            main_branch_commit=$(git rev-parse origin/main)
-            echo "main_branch_commit=$main_branch_commit"
-
-            # Find the last commit that the branches have in common:
-            common_commit=$(git merge-base origin/main $feature_branch_commit)
-            echo "common_commit=$common_commit"
-
-            # Compare the commit hashes
-            if [ "$common_commit" != "$main_branch_commit" ]; then
-                echo "::error::The release PR is not up-to-date with main."
-                exit 1
-            fi
+            head_commit=${{github.event.pull_request.head.sha}}
+          else
+            pr_number=$(echo "${{ github.ref }}" | grep -oE 'pr-[0-9]+' | tr -d 'pr-')
+            head_commit=$(gh pr view $pr_number --repo ${{github.repository}} --json headRefOid | jq -rc '.headRefOid')
           fi
+          echo "head_commit=$head_commit"
 
-          if [[ "${{ github.event_name }}" == 'merge_group' ]]; then
-            # TODO:
-            echo "::error::The release PR is not up-to-date with main."
-          fi
+          # Get the commit hash of the latest commit on the main branch:
+          main_branch_commit=$(git rev-parse origin/main)
+          echo "main_branch_commit=$main_branch_commit"
           
-          echo "is_release=$is_release" >> $GITHUB_OUTPUT
+          # Find the last commit that the branches have in common:
+          common_commit=$(git merge-base origin/main $head_commit)
+          echo "common_commit=$common_commit"
+          
+          # Compare the commit hashes
+          if [ "$common_commit" != "$main_branch_commit" ]; then
+              echo "::error::The release PR is not up-to-date with main."
+              exit 1
+          fi
 
   # Creates the release pull-request
   create-release-pr:
     runs-on: ubuntu-latest
     environment: Development
-    needs: evaluate-release
+    needs: [build, evaluate-release]
     if: |
       github.event_name == 'push' &&
-      needs.evaluate-release.outputs['is_release'] == 'false'
+      needs.evaluate-release.outputs['is_release'] == 'false' &&
+      needs.build.outputs.matrix != '[]'
     env:
       GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.RELEASE_GH_TOKEN }}
           fetch-depth: 0
 
       - name: Bootstrap
@@ -243,7 +250,7 @@ jobs:
             yarn ts-node ./bin/project/generate-changelog.ts "$latest_release" ${{ github.sha }} "$project"
           done
 
-          release_version=$(./bin/release/generate-version ${{ github.sha }})
+          release_version=$(./bin/release/generate-version)
           git add . && git commit -m "release: $release_version"
           git push --force origin release
 
@@ -263,7 +270,7 @@ jobs:
     steps:
       - name: create release tag
         run: |
-          release_version=$(./bin/release/generate-version ${{ github.sha }})
+          release_version=$(./bin/release/generate-version)
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}

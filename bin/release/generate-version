@@ -1,5 +1,11 @@
+#!/bin/sh
+
+# Get the directory of the currently executing script
+script_dir="$(dirname "$(realpath "$0")")"
+
 # Generate release version based on provided commit
-commit_sha=$1
+commit=$1 | HEAD
+commit_sha=$(git rev-parse HEAD)
 commit_date=$(git log --format="%ad" --date=short -n 1 $commit_sha)
 
 if [[ "$(uname)" == "Darwin" ]]; then
@@ -11,5 +17,5 @@ else
 fi
 
 commit_number=$(git rev-list --count $commit_sha)
-short_commit_sha=$(echo $commit_sha | cut -c1-7)
-echo "${year}.$(printf '%02d' "$month").${commit_number}+${short_commit_sha}"
+version_hash=$($script_dir/get-version-hash)
+echo "${year}.$(printf '%02d' "$month").${commit_number}+${version_hash}"

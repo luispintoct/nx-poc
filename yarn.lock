@@ -415,15 +415,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@commercetools-cli/new-pkg-demo@workspace:packages/shared/new-pkg-demo":
+"@commercetools-cli/services-connect@workspace:*, @commercetools-cli/services-connect@workspace:packages/shared/services-connect":
   version: 0.0.0-use.local
-  resolution: "@commercetools-cli/new-pkg-demo@workspace:packages/shared/new-pkg-demo"
-  languageName: unknown
-  linkType: soft
-
-"@commercetools-cli/services-connect@workspace:*, @commercetools-cli/services-connect@workspace:packages/services/services-connect":
-  version: 0.0.0-use.local
-  resolution: "@commercetools-cli/services-connect@workspace:packages/services/services-connect"
+  resolution: "@commercetools-cli/services-connect@workspace:packages/shared/services-connect"
   dependencies:
     "@commercetools-cli/services-git": "workspace:*"
     jest: "npm:^29.7.0"
@@ -431,9 +425,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@commercetools-cli/services-content@workspace:*, @commercetools-cli/services-content@workspace:packages/services/services-content":
+"@commercetools-cli/services-content@workspace:*, @commercetools-cli/services-content@workspace:packages/shared/services-content":
   version: 0.0.0-use.local
-  resolution: "@commercetools-cli/services-content@workspace:packages/services/services-content"
+  resolution: "@commercetools-cli/services-content@workspace:packages/shared/services-content"
   dependencies:
     "@types/jest": "npm:^29.5.12"
     jest: "npm:^29.7.0"
@@ -442,9 +436,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@commercetools-cli/services-git@workspace:*, @commercetools-cli/services-git@workspace:packages/services/services-git":
+"@commercetools-cli/services-git@workspace:*, @commercetools-cli/services-git@workspace:packages/shared/services-git":
   version: 0.0.0-use.local
-  resolution: "@commercetools-cli/services-git@workspace:packages/services/services-git"
+  resolution: "@commercetools-cli/services-git@workspace:packages/shared/services-git"
   dependencies:
     jest: "npm:^29.7.0"
     simple-git: "npm:^3.22.0"
@@ -452,15 +446,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@commercetools-cli/topic-boilerplate@workspace:packages/topics/topic-boilerplate":
+"@commercetools-cli/topic-boilerplate@workspace:packages/topics/boilerplate":
   version: 0.0.0-use.local
-  resolution: "@commercetools-cli/topic-boilerplate@workspace:packages/topics/topic-boilerplate"
+  resolution: "@commercetools-cli/topic-boilerplate@workspace:packages/topics/boilerplate"
   languageName: unknown
   linkType: soft
 
-"@commercetools-cli/topic-connect@workspace:*, @commercetools-cli/topic-connect@workspace:packages/topics/topic-connect":
+"@commercetools-cli/topic-connect@workspace:*, @commercetools-cli/topic-connect@workspace:packages/topics/connect":
   version: 0.0.0-use.local
-  resolution: "@commercetools-cli/topic-connect@workspace:packages/topics/topic-connect"
+  resolution: "@commercetools-cli/topic-connect@workspace:packages/topics/connect"
   dependencies:
     "@commercetools-cli/services-connect": "workspace:*"
     "@commercetools-cli/services-content": "workspace:*"
