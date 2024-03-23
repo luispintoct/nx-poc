@@ -55,11 +55,11 @@ jobs:
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(./bin/project/read-version $project)-rc"
-            ./bin/release/update-version "$project" "$version"
+            version="$(node ./bin/project/read-version $project)-rc"
+            node ./bin/release/update-version "$project" "$version"
           done
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(./bin/project/read-version $project)"
+            version="$(node ./bin/project/read-version $project)"
             dir=$(yarn nx show project $project --json | jq -r '.root')
             if [ ! -f "$dir/package.json" ]; then
               continue;
@@ -105,7 +105,7 @@ jobs:
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(./bin/project/read-version $project)"
+            version="$(node ./bin/project/read-version $project)"
             dir=$(yarn nx show project $project --json | jq -r '.root')
             if [ ! -f "$dir/package.json" ]; then
               continue;
