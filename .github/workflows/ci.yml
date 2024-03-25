@@ -183,9 +183,9 @@ jobs:
             echo "::error::Multiple commits found, but there's a release commit. Only one commit is allowed if there's a release commit."
             exit 1
           fi
-          echo "is_release=false" >> $GITHUB_OUTPUT
+          echo "is_release=$is_release" >> $GITHUB_OUTPUT
       
-      # check if is a release pull-request
+      # check if release pr is up-to-date with main
       - name: enforce release up-to-date
         if: github.event_name != 'push' && steps.set-output.outputs.is_release == 'true'
         env:
@@ -196,7 +196,7 @@ jobs:
             head_commit=${{github.event.pull_request.head.sha}}
           else
             pr_number=$(echo "${{ github.ref }}" | grep -oE 'pr-[0-9]+' | tr -d 'pr-')
-            head_commit=$(gh pr view $pr_number --repo ${{github.repository}} --json headRefOid | jq -c '.headRefOid')
+            head_commit=$(gh pr view $pr_number --repo ${{github.repository}} --json headRefOid | jq -rc '.headRefOid')
           fi
           echo "head_commit=$head_commit"
 
