@@ -1,6 +1,6 @@
 {
   "name": "@commercetools-cli/services-connect",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "dist",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
