@@ -275,7 +275,7 @@ jobs:
           fetch-depth: 0
       - name: create release tag
         run: |
-          release_version=$(echo "${{ github.event.head_commit.message }}" | tr -d 'release: ')
+          release_version=$(echo "${{ github.event.head_commit.message }}" | sed 's/release: //')
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "release-$release_version" -m "Release Tag $release_version" ${{ github.sha }}
