@@ -74,7 +74,7 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any") == "true" ]]; then
+            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any // false") == "true" ]]; then
               echo "::warning::Project $project@$version already exists"
               continue;
             fi
@@ -84,7 +84,7 @@ jobs:
       - name: Run e2e (against candidates)
         run: |
           # Install cli globally
-          npm i -g @commercetools/cli --registry=https://brave-suitable-snapper.ngrok-free.app/
+          npm i -g @commercetools/cli
           # Log cli version
           commercetools --version
           # Run tests
@@ -124,7 +124,7 @@ jobs:
             if jq -e '.private == true' <<< $(cat $dir/package.json) >/dev/null; then
               continue;
             fi
-            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any") == "true" ]]; then
+            if [[ $(yarn npm info $project --json | jq ".versions | map(. == \"$version\") | any // false") == "true" ]]; then
               echo "::warning::Project $project@$version already exists"
               continue;
             fi
@@ -136,7 +136,7 @@ jobs:
       - name: Run e2e
         run: |
           # install cli globally
-          npm i -g @commercetools/cli --registry=https://brave-suitable-snapper.ngrok-free.app/
+          npm i -g @commercetools/cli
           # log cli version
           commercetools --version
           # run tests
