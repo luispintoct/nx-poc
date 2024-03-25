@@ -61,8 +61,9 @@ jobs:
       - name: Deploy candidates
         run: |
           projects='${{ needs.prepare.outputs.projects }}'
+          release_version=$(./bin/release/get-version-hash)
           echo $projects | jq -r '.[]' | while read -r project; do
-            version="$(yarn ts-node ./bin/project/read-version.ts $project)-$(./bin/release/get-version-hash)"
+            version="$(yarn ts-node ./bin/project/read-version.ts $project)-$release_version"
             yarn ts-node ./bin/project/update-version.ts "$project" "$version"
           done
           echo $projects | jq -r '.[]' | while read -r project; do
