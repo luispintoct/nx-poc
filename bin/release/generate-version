@@ -4,11 +4,17 @@
 script_dir="$(dirname "$(realpath "$0")")"
 
 # Generate release version based on provided commit
-commit=$1 | HEAD
+
+if [ -z "$1" ]; then
+    commit="HEAD"
+else
+    commit="$1"
+fi
+
 commit_sha=$(git rev-parse HEAD)
 commit_date=$(git log --format="%ad" --date=short -n 1 $commit_sha)
 
-if [[ "$(uname)" == "Darwin" ]]; then
+if [ "$(uname)" = "Darwin" ]; then
     year=$(date -jf "%Y-%m-%d" "$commit_date" +"%Y")
     month=$(date -jf "%Y-%m-%d" "$commit_date" +"%m")
 else
