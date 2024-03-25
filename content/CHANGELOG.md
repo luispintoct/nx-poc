@@ -1,3 +1,11 @@
+## 0.0.6 (2024-03-25)
+
+
+### Bug Fixes
+
+* **content:** template name ([1814e74](https://github.com/commercetools/cli/commit/1814e74d1684923f46559f74546d2da5939d4261))
+
+
 ## 0.0.5 (2024-03-25)
 
 
