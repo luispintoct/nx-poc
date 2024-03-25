@@ -1,3 +1,11 @@
+## 0.0.5 (2024-03-25)
+
+
+### Features
+
+* **content:** new content ([b384ae1](https://github.com/commercetools/cli/commit/b384ae1fbc9ca0a2cfe704dec8f087be5b929a09))
+
+
 ## 0.0.4 (2024-03-25)
 
 

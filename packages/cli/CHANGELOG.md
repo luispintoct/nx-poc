@@ -1,3 +1,7 @@
+## 0.0.6 (2024-03-25)
+
+
+- This bump does not introduce any new features or fixes. It is solely a result of updates to dependencies, tooling, or global settings.
 ## 0.0.5 (2024-03-25)
 
 
